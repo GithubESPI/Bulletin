@@ -16,8 +16,46 @@ const Page = () => {
   const router = useRouter();
 
   const { startUpload, isUploading } = useUploadThing("fileUploader", {
-    onClientUploadComplete: ([data]) => {
-      const configId = data.serverData.configId;
+    onClientUploadComplete: async (uploadedFiles) => {
+      if (uploadedFiles.length !== 2) {
+        toast({
+          title: "Veuillez télécharger les fichiers Excel et Word.",
+          description: "Deux fichiers sont nécessaires.",
+          variant: "destructive",
+          className: "bg-destructive-50 border-transparent",
+        });
+        return;
+      }
+
+      const fileUrls = uploadedFiles.map((file) => file.url);
+      const formData = new FormData();
+
+      // Télécharger les fichiers depuis les URLs pour les ajouter à FormData
+      const fetchFiles = await Promise.all(
+        fileUrls.map((url) => fetch(url).then((res) => res.blob()))
+      );
+
+      formData.append("excel_file", fetchFiles[0], "uploaded_excel_file.xlsx");
+      formData.append("word_file", fetchFiles[1], "uploaded_word_file.docx");
+
+      const response = await fetch("http://localhost:8000/upload-and-integrate-excel-and-word", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        toast({
+          title: "Erreur lors de l'upload",
+          description: "Une erreur s'est produite lors de l'upload des fichiers.",
+          variant: "destructive",
+          className: "bg-destructive-50 border-transparent",
+        });
+        return;
+      }
+
+      const responseData = await response.json();
+      const configId = responseData.configId;
+
       startTransition(() => {
         router.push(`/configure/design?id=${configId}`);
       });
@@ -41,8 +79,18 @@ const Page = () => {
   };
 
   const onDropAccepted = (acceptedFiles: File[]) => {
-    startUpload(acceptedFiles, { configId: undefined });
+    if (acceptedFiles.length !== 2) {
+      toast({
+        title: "Veuillez télécharger les fichiers Excel et Word.",
+        description: "Deux fichiers sont nécessaires.",
+        variant: "destructive",
+        className: "bg-destructive-50 border-transparent",
+      });
+      setIsDragOver(false);
+      return;
+    }
 
+    startUpload(acceptedFiles, { configId: undefined });
     setIsDragOver(false);
   };
 
@@ -96,7 +144,7 @@ const Page = () => {
                   </div>
                 ) : isDragOver ? (
                   <p>
-                    <span className="font-semibold">Déposer un fichier</span> à télécharger
+                    <span className="font-semibold">Déposer des fichiers</span> à télécharger
                   </p>
                 ) : (
                   <p>
