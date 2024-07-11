@@ -4,7 +4,15 @@ import fetch from "node-fetch";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { z } from "zod";
 
+interface UploadedFile {
+  url: string;
+  name: string;
+  type: string;
+}
+
 const f = createUploadthing();
+
+const uploadSessions: Record<string, { excelUrl?: string; wordUrl?: string }> = {};
 
 export const ourFileRouter = {
   fileUploader: f({
@@ -15,57 +23,103 @@ export const ourFileRouter = {
     },
     "application/msword": { maxFileSize: "4GB" },
   })
-    .input(z.object({ configId: z.string().optional() }))
+    .input(z.object({ configId: z.string().optional(), sessionId: z.string() }))
     .middleware(async ({ input }) => {
       return { input };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const { configId } = metadata.input;
+      const { configId, sessionId } = metadata.input;
+      const uploadedFile = file as UploadedFile;
 
       try {
-        // Fetch the file and read it as a buffer
-        const res = await fetch(file.url);
-        const buffer = await res.arrayBuffer();
+        console.log("Received file:", uploadedFile);
 
-        // Use exceljs to parse the Excel file
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(buffer);
-
-        const worksheet = workbook.getWorksheet(1);
-        const excelData = [];
-
-        if (worksheet) {
-          worksheet.eachRow((row) => {
-            excelData.push(row.values);
-          });
-        } else {
-          throw new Error("Worksheet not found");
+        if (!uploadedFile) {
+          console.error("No file uploaded.");
+          throw new Error("No file uploaded");
         }
 
-        const excelUrl = file.url; // Get the URL of the uploaded file
-        const fileName = file.name; // Get the name of the uploaded file
+        // Initialize session if not present
+        if (!uploadSessions[sessionId]) {
+          uploadSessions[sessionId] = {};
+        }
 
-        if (!configId) {
-          const configuration = await db.configuration.create({
-            data: {
-              excelUrl: excelUrl,
-              fileName: fileName,
-            },
-          });
+        // Process Excel file if it's an Excel file
+        if (uploadedFile.name.endsWith(".xls") || uploadedFile.name.endsWith(".xlsx")) {
+          console.log("Processing Excel file:", uploadedFile.url);
+          const excelRes = await fetch(uploadedFile.url);
+          if (!excelRes.ok) {
+            console.error("Failed to fetch the Excel file:", excelRes.statusText);
+            throw new Error(`Failed to fetch the Excel file: ${excelRes.statusText}`);
+          }
+          const excelBuffer = await excelRes.arrayBuffer();
+          console.log("Excel file fetched successfully");
 
-          return { configId: configuration.id };
-        } else {
-          const updatedConfiguration = await db.configuration.update({
-            where: {
-              id: configId,
-            },
-            data: {
-              excelUrl: excelUrl,
-              fileName: fileName,
-            },
-          });
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(excelBuffer);
+          console.log("Excel workbook loaded successfully");
 
-          return { configId: updatedConfiguration.id };
+          const worksheet = workbook.getWorksheet(1);
+          const excelData: any[] = [];
+
+          if (worksheet) {
+            worksheet.eachRow((row) => {
+              excelData.push(row.values);
+            });
+            console.log("Worksheet processed successfully");
+          } else {
+            console.error("Worksheet not found in the Excel file.");
+            throw new Error("Worksheet not found");
+          }
+
+          uploadSessions[sessionId].excelUrl = uploadedFile.url;
+        }
+
+        // Process Word file if it's a Word file
+        if (uploadedFile.name.endsWith(".doc") || uploadedFile.name.endsWith(".docx")) {
+          console.log("Processing Word file:", uploadedFile.url);
+          const wordRes = await fetch(uploadedFile.url);
+          if (!wordRes.ok) {
+            console.error("Failed to fetch the Word file:", wordRes.statusText);
+            throw new Error(`Failed to fetch the Word file: ${wordRes.statusText}`);
+          }
+          const wordBuffer = await wordRes.arrayBuffer();
+          console.log("Word file fetched successfully");
+
+          uploadSessions[sessionId].wordUrl = uploadedFile.url;
+        }
+
+        // Check if both files are uploaded
+        const { excelUrl, wordUrl } = uploadSessions[sessionId];
+        if (excelUrl && wordUrl) {
+          const fileName = uploadedFile.name;
+
+          if (!configId) {
+            const configuration = await db.configuration.create({
+              data: {
+                excelUrl: excelUrl,
+                wordUrl: wordUrl,
+                fileName: fileName,
+              },
+            });
+            console.log("New configuration created with ID:", configuration.id);
+            // Clean up session
+            delete uploadSessions[sessionId];
+            return { configId: configuration.id };
+          } else {
+            const updatedConfiguration = await db.configuration.update({
+              where: { id: configId },
+              data: {
+                excelUrl: excelUrl,
+                wordUrl: wordUrl,
+                fileName: fileName,
+              },
+            });
+            console.log("Configuration updated with ID:", updatedConfiguration.id);
+            // Clean up session
+            delete uploadSessions[sessionId];
+            return { configId: updatedConfiguration.id };
+          }
         }
       } catch (error) {
         console.error("Error in onUploadComplete:", error);

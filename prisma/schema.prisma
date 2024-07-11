@@ -16,6 +16,7 @@ model Configuration {
   id              String @id @default(cuid())
   fileName        String
   excelUrl        String
+  wordUrl         String
   model           BulletinModel?
 }
 

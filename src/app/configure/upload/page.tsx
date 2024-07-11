@@ -8,54 +8,20 @@ import { FileUp, Loader2, MousePointerSquareDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
+import { v4 as uuidv4 } from "uuid"; // Import UUID
 
 const Page = () => {
   const { toast } = useToast();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [missingFile, setMissingFile] = useState<string | null>(null);
+  const [sessionId] = useState(uuidv4()); // Create a sessionId
   const router = useRouter();
 
   const { startUpload, isUploading } = useUploadThing("fileUploader", {
-    onClientUploadComplete: async (uploadedFiles) => {
-      if (uploadedFiles.length !== 2) {
-        toast({
-          title: "Veuillez télécharger les fichiers Excel et Word.",
-          description: "Deux fichiers sont nécessaires.",
-          variant: "destructive",
-          className: "bg-destructive-50 border-transparent",
-        });
-        return;
-      }
-
-      const fileUrls = uploadedFiles.map((file) => file.url);
-      const formData = new FormData();
-
-      // Télécharger les fichiers depuis les URLs pour les ajouter à FormData
-      const fetchFiles = await Promise.all(
-        fileUrls.map((url) => fetch(url).then((res) => res.blob()))
-      );
-
-      formData.append("excel_file", fetchFiles[0], "uploaded_excel_file.xlsx");
-      formData.append("word_file", fetchFiles[1], "uploaded_word_file.docx");
-
-      const response = await fetch("http://localhost:8000/upload-and-integrate-excel-and-word", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        toast({
-          title: "Erreur lors de l'upload",
-          description: "Une erreur s'est produite lors de l'upload des fichiers.",
-          variant: "destructive",
-          className: "bg-destructive-50 border-transparent",
-        });
-        return;
-      }
-
-      const responseData = await response.json();
-      const configId = responseData.configId;
-
+    onClientUploadComplete: (data) => {
+      const configId = data[0]?.serverData?.configId;
       startTransition(() => {
         router.push(`/configure/design?id=${configId}`);
       });
@@ -79,18 +45,25 @@ const Page = () => {
   };
 
   const onDropAccepted = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length !== 2) {
-      toast({
-        title: "Veuillez télécharger les fichiers Excel et Word.",
-        description: "Deux fichiers sont nécessaires.",
-        variant: "destructive",
-        className: "bg-destructive-50 border-transparent",
-      });
-      setIsDragOver(false);
-      return;
+    const newFiles = [...uploadedFiles, ...acceptedFiles];
+    setUploadedFiles(newFiles);
+
+    const hasExcel = newFiles.some(
+      (file) => file.name.endsWith(".xls") || file.name.endsWith(".xlsx")
+    );
+    const hasWord = newFiles.some(
+      (file) => file.name.endsWith(".doc") || file.name.endsWith(".docx")
+    );
+
+    if (hasExcel && hasWord) {
+      startUpload(newFiles, { configId: undefined, sessionId });
+      setMissingFile(null);
+    } else if (!hasExcel) {
+      setMissingFile("Excel manquant");
+    } else if (!hasWord) {
+      setMissingFile("Word manquant");
     }
 
-    startUpload(acceptedFiles, { configId: undefined });
     setIsDragOver(false);
   };
 
@@ -144,14 +117,15 @@ const Page = () => {
                   </div>
                 ) : isDragOver ? (
                   <p>
-                    <span className="font-semibold">Déposer des fichiers</span> à télécharger
+                    <span className="font-semibold">Déposer un fichier</span> à télécharger
                   </p>
                 ) : (
                   <p>
                     <span className="font-semibold">Cliquer pour télécharger</span> ou
-                    glisser-déposer
+                    glisser-déposer un excel et un word
                   </p>
                 )}
+                {missingFile && <p className="text-red-500 text-center">{missingFile}</p>}
               </div>
 
               {isPending ? null : (
