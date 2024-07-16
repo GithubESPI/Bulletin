@@ -59,7 +59,7 @@ const Page = () => {
       startUpload(newFiles, { configId: undefined, sessionId });
       setMissingFile(null);
     } else if (!hasExcel) {
-      setMissingFile("Excel manquant");
+      setMissingFile("Excel manquant dans l'upload");
     } else if (!hasWord) {
       setMissingFile("Word manquant");
     }
