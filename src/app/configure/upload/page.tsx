@@ -2,7 +2,6 @@
 
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
-import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
 import { FileUp, Loader2, MousePointerSquareDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,19 +16,8 @@ const Page = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [missingFile, setMissingFile] = useState<string | null>(null);
   const [sessionId] = useState(uuidv4()); // Create a sessionId
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const router = useRouter();
-
-  const { startUpload, isUploading } = useUploadThing("fileUploader", {
-    onClientUploadComplete: (data) => {
-      const configId = data[0]?.serverData?.configId;
-      startTransition(() => {
-        router.push(`/configure/design?id=${configId}`);
-      });
-    },
-    onUploadProgress(p) {
-      setUploadProgress(p);
-    },
-  });
 
   const onDropRejected = (rejectedFiles: FileRejection[]) => {
     const [file] = rejectedFiles;
@@ -56,7 +44,49 @@ const Page = () => {
     );
 
     if (hasExcel && hasWord) {
-      startUpload(newFiles, { configId: undefined, sessionId });
+      setIsUploading(true);
+      const formData = new FormData();
+      newFiles.forEach((file) => {
+        if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
+          formData.append("excel_file", file, file.name);
+        } else if (file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
+          formData.append("word_file", file, file.name);
+        }
+      });
+
+      fetch("http://localhost:8000/upload-and-integrate-excel-and-word", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => {
+          if (!response.ok) {
+            return response.json().then((data) => {
+              throw new Error(data.detail || "Failed to upload and integrate files");
+            });
+          }
+          return response.json();
+        })
+        .then((result) => {
+          console.log(result);
+          if (result.configId) {
+            startTransition(() => {
+              router.push(`/configure/design?id=${result.configId}`);
+            });
+          } else {
+            throw new Error("No configId returned from the server");
+          }
+          setIsUploading(false);
+        })
+        .catch((error) => {
+          toast({
+            title: "Erreur lors de l'upload",
+            description: error.message,
+            variant: "destructive",
+            className: "bg-destructive-50 border-transparent",
+          });
+          setIsUploading(false);
+        });
+
       setMissingFile(null);
     } else if (!hasExcel) {
       setMissingFile("Excel manquant");

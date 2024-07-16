@@ -13,10 +13,11 @@ enum BulletinModel {
 }
 
 model Configuration {
-  id              String @id @default(cuid())
+  id              String   @id @default(cuid())
   fileName        String
   excelUrl        String
   wordUrl         String
+  generatedExcelUrl String? // Ajoutez cette ligne
   model           BulletinModel?
 }
 

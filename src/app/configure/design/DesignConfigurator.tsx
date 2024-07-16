@@ -20,11 +20,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { saveConfig as _saveConfig, SaveConfigArgs } from "./actions";
 
-interface DesignCofiguratorProps {
+interface DesignConfiguratorProps {
   configId: string;
 }
 
-const DesignConfigurator = ({ configId }: DesignCofiguratorProps) => {
+const DesignConfigurator = ({ configId }: DesignConfiguratorProps) => {
   const { toast } = useToast();
   const router = useRouter();
 
@@ -126,11 +126,8 @@ const DesignConfigurator = ({ configId }: DesignCofiguratorProps) => {
         <div className="w-full px-8 h-16 bg-white">
           <div className="h-px w-full bg-zinc-200" />
           <div className="w-full h-full flex justify-end items-center">
-            <div className="className='w-full flex gap-6 items-center">
+            <div className="w-full flex gap-6 items-center">
               <Button
-                // isLoading={isPending}
-                // disabled={isPending}
-                // loadingText="Saving"
                 onClick={() =>
                   saveConfig({
                     configId,

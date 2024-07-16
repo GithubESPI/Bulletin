@@ -13,9 +13,17 @@ interface UploadedFile {
   type: string;
 }
 
+interface PythonResponse {
+  generatedExcelUrl: string;
+}
+
 const f = createUploadthing();
 
 const uploadSessions: Record<string, { excelUrl?: string; wordUrl?: string }> = {};
+
+const isPythonResponse = (data: any): data is PythonResponse => {
+  return data && typeof data.generatedExcelUrl === "string";
+};
 
 export const ourFileRouter = {
   fileUploader: f({
@@ -83,7 +91,29 @@ export const ourFileRouter = {
           ]);
 
           // Further processing with the fetched data and the uploaded files
-          // Add your code for processing the data and integrating it with the template here
+          const formData = new FormData();
+          formData.append("excel_file", excelUrl);
+          formData.append("word_file", wordUrl);
+
+          const pythonResponse = await fetch(
+            "http://localhost:8000/upload-and-integrate-excel-and-word",
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          if (!pythonResponse.ok) {
+            throw new Error("Failed to process files with the Python backend");
+          }
+
+          const result = await pythonResponse.json();
+
+          if (!isPythonResponse(result)) {
+            throw new Error("Unexpected response format from the Python backend");
+          }
+
+          const generatedExcelUrl = result.generatedExcelUrl;
 
           // Save the processed data back to Prisma
           if (!configId) {
@@ -92,6 +122,7 @@ export const ourFileRouter = {
                 excelUrl,
                 wordUrl,
                 fileName,
+                generatedExcelUrl,
               },
             });
             console.log("New configuration created with ID:", configuration.id);
@@ -104,6 +135,7 @@ export const ourFileRouter = {
                 excelUrl,
                 wordUrl,
                 fileName,
+                generatedExcelUrl,
               },
             });
             console.log("Configuration updated with ID:", updatedConfiguration.id);

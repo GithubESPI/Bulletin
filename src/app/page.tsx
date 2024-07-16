@@ -28,7 +28,12 @@ export default function Page() {
             className="mb-12 h-10 w-fit"
           />
 
-          <Button onClick={() => signIn("azure-ad")}>Se connecter avec Azure</Button>
+          {/* <Button className="p-5" onClick={() => signIn("")}>
+            Se connecter avec Azure
+          </Button> */}
+          <Button className="p-5" onClick={() => signIn("github")}>
+            Se connecter avec Github
+          </Button>
 
           <div className="text-14-regular mt-20 flex justify-between">
             <p className="justify-items-end text-dark-600 xl:text-left">
