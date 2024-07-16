@@ -54,7 +54,7 @@ const Navbar = () => {
                     className: "hidden bg-primary-50 sm:flex items-center gap-1",
                   })}
                 >
-                  Upload excel
+                  Générer vos bulletins
                   <ArrowRight className="ml-1.5 h-5 w-5" />
                 </Link>
               </>
@@ -76,7 +76,7 @@ const Navbar = () => {
                     className: "hidden bg-primary-50 sm:flex items-center gap-1",
                   })}
                 >
-                  Upload un excel
+                  Générer vos bulletins
                   <ArrowRight className="ml-1.5 h-5 w-5" />
                 </Link>
               </>

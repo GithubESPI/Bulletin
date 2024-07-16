@@ -89,9 +89,9 @@ const Page = () => {
 
       setMissingFile(null);
     } else if (!hasExcel) {
-      setMissingFile("Excel manquant");
+      setMissingFile("Extraction des notes manquante.");
     } else if (!hasWord) {
-      setMissingFile("Word manquant");
+      setMissingFile("Document word avec les appréciations manquant.");
     }
 
     setIsDragOver(false);

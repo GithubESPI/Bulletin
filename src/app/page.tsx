@@ -17,23 +17,23 @@ export default function Page() {
   }, [status, router]);
 
   return (
-    <div className="flex h-screen max-h-screen">
+    <div className="bg-primary-50 flex h-screen max-h-screen">
       <section className="remove-scrollbar container my-auto">
-        <div className="sub-container max-w-[496px]">
+        <div className="bg-white sub-container max-w-[496px] mx-auto rounded-lg p-20">
           <Image
             src="/logo.png"
             height={1000}
             width={1000}
             alt="patient"
-            className="mb-12 h-10 w-fit"
+            className="mb-12 h-25 w-fit"
           />
 
-          <Button className="p-5" onClick={() => signIn("")}>
+          {/* <Button className="p-5" onClick={() => signIn("")}>
             Se connecter avec Azure
-          </Button>
-          {/* <Button className="p-5" onClick={() => signIn("github")}>
-            Se connecter avec Github
           </Button> */}
+          <Button className="bg-primary-50 p-6 mx-auto" onClick={() => signIn("")}>
+            Se connecter avec mon compte ESPI
+          </Button>
 
           <div className="text-14-regular mt-20 flex justify-between">
             <p className="justify-items-end text-dark-600 xl:text-left">

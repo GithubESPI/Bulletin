@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
-import GithubProvider from "next-auth/providers/github";
+// import GithubProvider from "next-auth/providers/github";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,10 +14,10 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
-    GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID as string,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    }),
+    // GithubProvider({
+    //   clientId: process.env.GITHUB_CLIENT_ID as string,
+    //   clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    // }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
