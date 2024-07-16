@@ -158,7 +158,7 @@ const Page = () => {
               </div>
 
               {isPending ? null : (
-                <p className="text-xs text-zinc-500">Excel (.xls, .xlsx), Word (.doc)</p>
+                <p className="text-xs text-zinc-500">Excel (.xls, .xlsx), Word (.doc, .docx)</p>
               )}
             </div>
           )}
