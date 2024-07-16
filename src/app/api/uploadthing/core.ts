@@ -4,6 +4,10 @@ import fetch from "node-fetch";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { z } from "zod";
 
+// Ensure environment variables are defined
+const YPAERO_BASE_URL = process.env.YPAERO_BASE_URL as string;
+const YPAERO_API_TOKEN = process.env.YPAERO_API_TOKEN as string;
+
 interface UploadedFile {
   url: string;
   name: string;
@@ -94,29 +98,54 @@ export const ourFileRouter = {
         if (excelUrl && wordUrl) {
           const fileName = uploadedFile.name;
 
+          // Fetch Ypareo data
+          const fetchApiData = async (url: string, headers: HeadersInit) => {
+            const response = await fetch(url, { headers });
+            if (!response.ok) {
+              throw new Error(`Failed to fetch data from ${url}: ${response.statusText}`);
+            }
+            return response.json();
+          };
+
+          const headers = {
+            "X-Auth-Token": YPAERO_API_TOKEN,
+            "Content-Type": "application/json",
+          };
+
+          const [apprenantsData, groupesData, absencesData] = await Promise.all([
+            fetchApiData(
+              `${YPAERO_BASE_URL}/r/v1/formation-longue/apprenants?codesPeriode=2`,
+              headers
+            ),
+            fetchApiData(`${YPAERO_BASE_URL}/r/v1/formation-longue/groupes`, headers),
+            fetchApiData(`${YPAERO_BASE_URL}/r/v1/absences/01-01-2023/31-12-2024`, headers),
+          ]);
+
+          // Further processing with the fetched data and the uploaded files
+          // Add your code for processing the data and integrating it with the template here
+
+          // Save the processed data back to Prisma
           if (!configId) {
             const configuration = await db.configuration.create({
               data: {
-                excelUrl: excelUrl,
-                wordUrl: wordUrl,
-                fileName: fileName,
+                excelUrl,
+                wordUrl,
+                fileName,
               },
             });
             console.log("New configuration created with ID:", configuration.id);
-            // Clean up session
             delete uploadSessions[sessionId];
             return { configId: configuration.id };
           } else {
             const updatedConfiguration = await db.configuration.update({
               where: { id: configId },
               data: {
-                excelUrl: excelUrl,
-                wordUrl: wordUrl,
-                fileName: fileName,
+                excelUrl,
+                wordUrl,
+                fileName,
               },
             });
             console.log("Configuration updated with ID:", updatedConfiguration.id);
-            // Clean up session
             delete uploadSessions[sessionId];
             return { configId: updatedConfiguration.id };
           }

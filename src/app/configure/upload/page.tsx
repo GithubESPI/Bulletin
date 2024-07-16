@@ -44,24 +44,53 @@ const Page = () => {
     });
   };
 
-  const onDropAccepted = (acceptedFiles: File[]) => {
-    const newFiles = [...uploadedFiles, ...acceptedFiles];
-    setUploadedFiles(newFiles);
+  const onDropAccepted = async (acceptedFiles: File[]) => {
+    const formData = new FormData();
+    let hasExcel = false;
+    let hasWord = false;
 
-    const hasExcel = newFiles.some(
-      (file) => file.name.endsWith(".xls") || file.name.endsWith(".xlsx")
-    );
-    const hasWord = newFiles.some(
-      (file) => file.name.endsWith(".doc") || file.name.endsWith(".docx")
-    );
+    acceptedFiles.forEach((file) => {
+      if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
+        formData.append("excel_file", file, file.name);
+        hasExcel = true;
+      } else if (file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
+        formData.append("word_file", file, file.name);
+        hasWord = true;
+      }
+    });
 
-    if (hasExcel && hasWord) {
-      startUpload(newFiles, { configId: undefined, sessionId });
-      setMissingFile(null);
-    } else if (!hasExcel) {
-      setMissingFile("Excel manquant");
-    } else if (!hasWord) {
-      setMissingFile("Word manquant");
+    if (!hasExcel || !hasWord) {
+      setMissingFile(!hasExcel ? "Excel manquant" : "Word manquant");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/upload-and-integrate-excel-and-word", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result);
+        // Gérez le succès ici
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to upload and integrate files");
+      }
+    } catch (error) {
+      let errorMessage = "An unknown error occurred";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Erreur lors de l'upload",
+        description: errorMessage,
+        variant: "destructive",
+        className: "bg-destructive-50 border-transparent",
+      });
     }
 
     setIsDragOver(false);
