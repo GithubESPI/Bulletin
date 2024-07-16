@@ -1,5 +1,4 @@
 import { db } from "@/db";
-import ExcelJS from "exceljs";
 import fetch from "node-fetch";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { z } from "zod";
@@ -48,48 +47,10 @@ export const ourFileRouter = {
           uploadSessions[sessionId] = {};
         }
 
-        // Process Excel file if it's an Excel file
+        // Store the uploaded file URL in the session
         if (uploadedFile.name.endsWith(".xls") || uploadedFile.name.endsWith(".xlsx")) {
-          console.log("Processing Excel file:", uploadedFile.url);
-          const excelRes = await fetch(uploadedFile.url);
-          if (!excelRes.ok) {
-            console.error("Failed to fetch the Excel file:", excelRes.statusText);
-            throw new Error(`Failed to fetch the Excel file: ${excelRes.statusText}`);
-          }
-          const excelBuffer = await excelRes.arrayBuffer();
-          console.log("Excel file fetched successfully");
-
-          const workbook = new ExcelJS.Workbook();
-          await workbook.xlsx.load(excelBuffer);
-          console.log("Excel workbook loaded successfully");
-
-          const worksheet = workbook.getWorksheet(1);
-          const excelData: any[] = [];
-
-          if (worksheet) {
-            worksheet.eachRow((row) => {
-              excelData.push(row.values);
-            });
-            console.log("Worksheet processed successfully");
-          } else {
-            console.error("Worksheet not found in the Excel file.");
-            throw new Error("Worksheet not found");
-          }
-
           uploadSessions[sessionId].excelUrl = uploadedFile.url;
-        }
-
-        // Process Word file if it's a Word file
-        if (uploadedFile.name.endsWith(".doc") || uploadedFile.name.endsWith(".docx")) {
-          console.log("Processing Word file:", uploadedFile.url);
-          const wordRes = await fetch(uploadedFile.url);
-          if (!wordRes.ok) {
-            console.error("Failed to fetch the Word file:", wordRes.statusText);
-            throw new Error(`Failed to fetch the Word file: ${wordRes.statusText}`);
-          }
-          const wordBuffer = await wordRes.arrayBuffer();
-          console.log("Word file fetched successfully");
-
+        } else if (uploadedFile.name.endsWith(".doc") || uploadedFile.name.endsWith(".docx")) {
           uploadSessions[sessionId].wordUrl = uploadedFile.url;
         }
 
