@@ -1,32 +1,11 @@
-import { db } from "@/db";
-import fetch from "node-fetch";
+import { db } from "@/lib/db";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { z } from "zod";
 
-// Ensure environment variables are defined
-const YPAERO_BASE_URL = process.env.YPAERO_BASE_URL as string;
-const YPAERO_API_TOKEN = process.env.YPAERO_API_TOKEN as string;
-
-interface UploadedFile {
-  url: string;
-  name: string;
-  type: string;
-}
-
-interface PythonResponse {
-  generatedExcelUrl: string;
-}
-
 const f = createUploadthing();
 
-const uploadSessions: Record<string, { excelUrl?: string; wordUrl?: string }> = {};
-
-const isPythonResponse = (data: any): data is PythonResponse => {
-  return data && typeof data.generatedExcelUrl === "string";
-};
-
 export const ourFileRouter = {
-  fileUploader: f({
+  excelUploader: f({
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { maxFileSize: "4GB" },
     "application/vnd.ms-excel": { maxFileSize: "4GB" },
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
@@ -34,118 +13,60 @@ export const ourFileRouter = {
     },
     "application/msword": { maxFileSize: "4GB" },
   })
-    .input(z.object({ configId: z.string().optional(), sessionId: z.string() }))
+    .input(z.object({ userId: z.string() }))
     .middleware(async ({ input }) => {
       return { input };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const { configId, sessionId } = metadata.input;
-      const uploadedFile = file as UploadedFile;
+      const { userId } = metadata.input;
 
-      try {
-        console.log("Received file:", uploadedFile);
+      const isExcelFile =
+        file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+        file.type === "application/vnd.ms-excel";
+      const isWordFile =
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        file.type === "application/msword";
 
-        if (!uploadedFile) {
-          console.error("No file uploaded.");
-          throw new Error("No file uploaded");
+      let existingConfig = await db.configuration.findFirst({
+        where: { userId: userId },
+      });
+
+      if (existingConfig) {
+        // Update existing configuration
+        const updatedData: any = { updatedAt: new Date() };
+
+        if (isExcelFile) {
+          updatedData.excelUrl = file.url;
+        }
+        if (isWordFile) {
+          updatedData.wordUrl = file.url;
         }
 
-        // Initialize session if not present
-        if (!uploadSessions[sessionId]) {
-          uploadSessions[sessionId] = {};
-        }
+        const updatedConfiguration = await db.configuration.update({
+          where: {
+            id: existingConfig.id,
+          },
+          data: updatedData,
+        });
 
-        // Store the uploaded file URL in the session
-        if (uploadedFile.name.endsWith(".xls") || uploadedFile.name.endsWith(".xlsx")) {
-          uploadSessions[sessionId].excelUrl = uploadedFile.url;
-        } else if (uploadedFile.name.endsWith(".doc") || uploadedFile.name.endsWith(".docx")) {
-          uploadSessions[sessionId].wordUrl = uploadedFile.url;
-        }
+        return { configId: updatedConfiguration.id };
+      } else {
+        // Create a new configuration
+        const initialData: any = {
+          fileName: isExcelFile ? "excel-et-word" : "excel-et-word",
+          userId: userId,
+          excelUrl: isExcelFile ? file.url : "excel manquant",
+          wordUrl: isWordFile ? file.url : "word manquant",
+          croppedExcelUrl: "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
 
-        // Check if both files are uploaded
-        const { excelUrl, wordUrl } = uploadSessions[sessionId];
-        if (excelUrl && wordUrl) {
-          const fileName = uploadedFile.name;
+        const configuration = await db.configuration.create({
+          data: initialData,
+        });
 
-          // Fetch Ypareo data
-          const fetchApiData = async (url: string, headers: HeadersInit) => {
-            const response = await fetch(url, { headers });
-            if (!response.ok) {
-              throw new Error(`Failed to fetch data from ${url}: ${response.statusText}`);
-            }
-            return response.json();
-          };
-
-          const headers = {
-            "X-Auth-Token": YPAERO_API_TOKEN,
-            "Content-Type": "application/json",
-          };
-
-          const [apprenantsData, groupesData, absencesData] = await Promise.all([
-            fetchApiData(
-              `${YPAERO_BASE_URL}/r/v1/formation-longue/apprenants?codesPeriode=2`,
-              headers
-            ),
-            fetchApiData(`${YPAERO_BASE_URL}/r/v1/formation-longue/groupes`, headers),
-            fetchApiData(`${YPAERO_BASE_URL}/r/v1/absences/01-01-2023/31-12-2024`, headers),
-          ]);
-
-          // Further processing with the fetched data and the uploaded files
-          const formData = new FormData();
-          formData.append("excel_file", excelUrl);
-          formData.append("word_file", wordUrl);
-
-          const pythonResponse = await fetch(
-            "http://localhost:8000/upload-and-integrate-excel-and-word",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-          if (!pythonResponse.ok) {
-            throw new Error("Failed to process files with the Python backend");
-          }
-
-          const result = await pythonResponse.json();
-
-          if (!isPythonResponse(result)) {
-            throw new Error("Unexpected response format from the Python backend");
-          }
-
-          const generatedExcelUrl = result.generatedExcelUrl;
-
-          // Save the processed data back to Prisma
-          if (!configId) {
-            const configuration = await db.configuration.create({
-              data: {
-                excelUrl,
-                wordUrl,
-                fileName,
-                generatedExcelUrl,
-              },
-            });
-            console.log("New configuration created with ID:", configuration.id);
-            delete uploadSessions[sessionId];
-            return { configId: configuration.id };
-          } else {
-            const updatedConfiguration = await db.configuration.update({
-              where: { id: configId },
-              data: {
-                excelUrl,
-                wordUrl,
-                fileName,
-                generatedExcelUrl,
-              },
-            });
-            console.log("Configuration updated with ID:", updatedConfiguration.id);
-            delete uploadSessions[sessionId];
-            return { configId: updatedConfiguration.id };
-          }
-        }
-      } catch (error) {
-        console.error("Error in onUploadComplete:", error);
-        throw new Error("Failed to process the uploaded file");
+        return { configId: configuration.id };
       }
     }),
 } satisfies FileRouter;

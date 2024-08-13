@@ -2,100 +2,97 @@
 
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
+import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
 import { FileUp, Loader2, MousePointerSquareDashed } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
-import { v4 as uuidv4 } from "uuid"; // Import UUID
 
 const Page = () => {
   const { toast } = useToast();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [missingFile, setMissingFile] = useState<string | null>(null);
-  const [sessionId] = useState(uuidv4()); // Create a sessionId
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [missingFile, setMissingFile] = useState<string | null>(null);
   const router = useRouter();
+  const { data: session } = useSession();
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [wordFile, setWordFile] = useState<File | null>(null);
+
+  const { startUpload } = useUploadThing("excelUploader", {
+    onClientUploadComplete: () => {
+      const configId = session?.user?.id;
+      startTransition(() => {
+        router.push(`/configure/design?id=${configId}`);
+      });
+    },
+    onUploadProgress(p) {
+      setUploadProgress(p);
+    },
+  });
 
   const onDropRejected = (rejectedFiles: FileRejection[]) => {
     const [file] = rejectedFiles;
 
     setIsDragOver(false);
 
+    console.log(`Fichier rejeté: ${file.file.name} de type ${file.file.type}`);
+
     toast({
-      title: `${file.file.type} n'est pas pris en charge.`,
-      description: "Veuillez choisir un document Excel ou Word.",
+      title: `${file.file.type} type is not supported.`,
+      description: "Please choose a PNG, JPG, JPEG, Excel, or Word document instead.",
       variant: "destructive",
-      className: "bg-destructive-50 border-transparent",
     });
   };
 
   const onDropAccepted = (acceptedFiles: File[]) => {
-    const newFiles = [...uploadedFiles, ...acceptedFiles];
-    setUploadedFiles(newFiles);
+    const userId = session?.user?.id;
 
-    const hasExcel = newFiles.some(
-      (file) => file.name.endsWith(".xls") || file.name.endsWith(".xlsx")
-    );
-    const hasWord = newFiles.some(
-      (file) => file.name.endsWith(".doc") || file.name.endsWith(".docx")
-    );
+    console.log("Fichiers acceptés: ", acceptedFiles);
 
-    if (hasExcel && hasWord) {
-      setIsUploading(true);
-      const formData = new FormData();
-      newFiles.forEach((file) => {
-        if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
-          formData.append("excel_file", file, file.name);
-        } else if (file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-          formData.append("word_file", file, file.name);
-        }
+    if (!userId) {
+      toast({
+        title: "User ID not found",
+        description: "Please log in to upload files.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      fetch("http://localhost:8000/upload-and-integrate-excel-and-word", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => {
-          if (!response.ok) {
-            return response.json().then((data) => {
-              throw new Error(data.detail || "Failed to upload and integrate files");
-            });
-          }
-          return response.json();
-        })
-        .then((result) => {
-          console.log(result);
-          if (result.configId) {
-            startTransition(() => {
-              router.push(`/configure/design?id=${result.configId}`);
-            });
-          } else {
-            throw new Error("No configId returned from the server");
-          }
-          setIsUploading(false);
-        })
-        .catch((error) => {
-          toast({
-            title: "Erreur lors de l'upload",
-            description: error.message,
-            variant: "destructive",
-            className: "bg-destructive-50 border-transparent",
-          });
-          setIsUploading(false);
-        });
+    let hasExcel = false;
+    let hasWord = false;
 
-      setMissingFile(null);
-    } else if (!hasExcel) {
+    acceptedFiles.forEach((file) => {
+      if (file.name.endsWith(".xls") || file.name.endsWith(".xlsx")) {
+        setExcelFile(file);
+        hasExcel = true;
+      } else if (file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
+        setWordFile(file);
+        hasWord = true;
+      }
+    });
+
+    if (!hasExcel) {
       setMissingFile("Extraction des notes manquante.");
     } else if (!hasWord) {
-      setMissingFile("Document word avec les appréciations manquant.");
+      setMissingFile("Document Word avec les appréciations manquant.");
     }
 
     setIsDragOver(false);
   };
+
+  useEffect(() => {
+    if (excelFile && wordFile) {
+      const userId = session?.user?.id;
+      if (userId) {
+        setIsUploading(true);
+        startUpload([excelFile, wordFile], { userId });
+        setMissingFile(null);
+      }
+    }
+  }, [excelFile, wordFile, session?.user?.id, startUpload]);
 
   const [isPending, startTransition] = useTransition();
 

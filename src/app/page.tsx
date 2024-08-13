@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { signIn, useSession } from "next-auth/react";
+import ButtonsProvider from "@/components/ButtonsProvider";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -28,13 +28,7 @@ export default function Page() {
             className="mb-12 h-25 w-fit"
           />
 
-          {/* <Button className="p-5" onClick={() => signIn("")}>
-            Se connecter avec Azure
-          </Button> */}
-          <Button className="bg-primary-50 p-6 mx-auto" onClick={() => signIn("")}>
-            Se connecter avec mon compte ESPI
-          </Button>
-
+          <ButtonsProvider />
           <div className="text-14-regular mt-20 flex justify-between">
             <p className="justify-items-end text-dark-600 xl:text-left">
               &copy; ESPI {new Date().getFullYear()}

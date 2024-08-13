@@ -6,20 +6,20 @@ import { usePathname } from "next/navigation";
 
 const STEPS = [
   {
-    name: "Etape 1: Types de bulletins",
-    description: "Choisissez un bulletin semestriel ou annuel",
+    name: "Etape 1: Ajouter vos documents",
+    description: "excel et word",
     url: "/upload",
   },
   {
-    name: "Etape 2: Ajouter vos documents",
-    description: "excel et word",
+    name: "Etape 2: Générer votre document",
+    description: "Pour obtenir vos bulletins",
     url: "/design",
   },
-  {
-    name: "Etape 3: Générer votre document",
-    description: "Pour obtenir vos bulletins",
-    url: "/preview",
-  },
+  // {
+  //   name: "Etape 3: Générer votre document",
+  //   description: "Pour obtenir vos bulletins",
+  //   url: "/preview",
+  // },
 ];
 
 const Steps = () => {

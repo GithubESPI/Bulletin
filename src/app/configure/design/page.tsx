@@ -1,6 +1,8 @@
-import { db } from "@/db";
+// app/configure/design/page.tsx
+import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
-import DesignConfigurator from "./DesignConfigurator";
+import React from "react";
+import DesignPreview from "./DesignPreview";
 
 interface PageProps {
   searchParams: {
@@ -8,14 +10,14 @@ interface PageProps {
   };
 }
 
-const page = async ({ searchParams }: PageProps) => {
+const Page: React.FC<PageProps> = ({ searchParams }) => {
   const { id } = searchParams;
 
   if (!id || typeof id !== "string") {
     return notFound();
   }
 
-  const configuration = await db.configuration.findUnique({
+  const configuration = db.configuration.findUnique({
     where: { id },
   });
 
@@ -23,7 +25,7 @@ const page = async ({ searchParams }: PageProps) => {
     return notFound();
   }
 
-  return <DesignConfigurator configId={configuration.id} />;
+  return <DesignPreview />;
 };
 
-export default page;
+export default Page;

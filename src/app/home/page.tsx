@@ -1,3 +1,5 @@
+"use client";
+
 import Bulletin from "@/components/Bulletin";
 import BulletinSteps from "@/components/BulletinSteps";
 import Excel from "@/components/Excel";
@@ -6,10 +8,15 @@ import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import Reviews from "@/components/Reviews";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 
-const Page = () => {
+export default function Page() {
+  const { data: session } = useSession();
+
+  console.log(session);
+
   return (
     <div className="bg-slate-50">
       <section>
@@ -123,6 +130,4 @@ const Page = () => {
       </section>
     </div>
   );
-};
-
-export default Page;
+}
