@@ -19,6 +19,10 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-utils
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
