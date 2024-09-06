@@ -57,7 +57,7 @@ export const ourFileRouter = {
           userId: userId,
           excelUrl: isExcelFile ? file.url : "excel manquant",
           wordUrl: isWordFile ? file.url : "word manquant",
-          croppedExcelUrl: "",
+          generatedExcelUrl: "",
           createdAt: new Date(),
           updatedAt: new Date(),
         };

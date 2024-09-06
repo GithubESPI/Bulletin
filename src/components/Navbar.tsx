@@ -17,7 +17,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="sticky z-[100] h-14 inset-x-0 top-0 w-full border-b border-gray-200 bg-white/75 backdrop-blur-lg transition-all">
+    <nav className="sticky z-[100] h-14 inset-x-0 top-0 w-full border-b border-gray-200 bg-gradient-to-r/75 from-yellow-50 to-pink-50 backdrop-blur-lg transition-all">
       <MaxWidthWrapper>
         <div className="flex h-14 items-center justify-between border-b border-zinc-200">
           <Link href="/home" className="flex z-40 font-semibold">
@@ -42,10 +42,13 @@ const Navbar = () => {
                   </Link>
                 ) : null}
                 <Link
-                  href="/configure/utlisation"
+                  href="#utilisation"
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
                   Guide d&apos;utilisation
+                </Link>
+                <Link href="#faq" className={buttonVariants({ size: "sm", variant: "ghost" })}>
+                  FAQ
                 </Link>
                 <Link
                   href="/configure/upload"

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       fileName: configuration.fileName,
       excelUrl: configuration.excelUrl,
       wordUrl: configuration.wordUrl,
-      croppedExcelUrl: configuration.croppedExcelUrl,
+      generatedExcelUrl: configuration.generatedExcelUrl,
       createdAt: configuration.createdAt,
       updatedAt: configuration.updatedAt,
     });

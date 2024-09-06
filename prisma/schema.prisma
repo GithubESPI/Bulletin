@@ -17,11 +17,10 @@ model Configuration {
   fileName        String
   excelUrl        String
   wordUrl         String
-  croppedExcelUrl String
   model           BulletinModel?
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  generatedExcelUrl String?  
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

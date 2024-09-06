@@ -1,6 +1,7 @@
 "use client";
 
 import ButtonsProvider from "@/components/ButtonsProvider";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,39 +12,37 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("Status:", status); // Ajoutez ceci pour voir le statut dans la console
     if (status === "authenticated") {
       router.push("/home");
     }
   }, [status, router]);
 
   return (
-    <div className="bg-primary-50 flex h-screen max-h-screen">
-      <section className="remove-scrollbar container my-auto">
-        <div className="bg-white sub-container max-w-[496px] mx-auto rounded-lg p-20">
-          <Image
-            src="/logo.png"
-            height={1000}
-            width={1000}
-            alt="patient"
-            className="mb-12 h-25 w-fit"
-          />
+    <main className="relative h-screen w-full">
+      <div className="absolute size-full">
+        <Image src="/images/background.png" alt="background" fill className="size-full" />
+      </div>
 
-          <ButtonsProvider />
-          <div className="text-14-regular mt-20 flex justify-between">
-            <p className="justify-items-end text-dark-600 xl:text-left">
-              &copy; ESPI {new Date().getFullYear()}
-            </p>
-          </div>
+      <div className="flex-center glassmorphism-auth h-screen w-full">
+        <div className="flex items-center justify-center min-h-screen p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <Image src="/logo.png" alt="logo" width={180} height={180} className="m-auto" />
+            </CardHeader>
+
+            <CardContent>
+              <CardTitle className="text-2xl font-bold text-center text-gray-800">
+                Connectez-vous
+              </CardTitle>
+              <CardDescription className="text-center pb-8 pt-3">
+                Pour continuer sur l&apos;application des bulletins
+              </CardDescription>
+              <ButtonsProvider />
+            </CardContent>
+          </Card>
         </div>
-      </section>
-
-      <Image
-        src="/onboarding.png"
-        height={1000}
-        width={1000}
-        alt="image-onboarding"
-        className="side-img max-w-[50%]"
-      />
-    </div>
+      </div>
+    </main>
   );
 }
