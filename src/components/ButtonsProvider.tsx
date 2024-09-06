@@ -18,6 +18,7 @@ const ButtonsProvider = () => {
 
   return (
     <div className="flex flex-col space-y-4">
+<<<<<<< HEAD
       <Button
         onClick={handleSignIn}
         className="w-full bg-primary-50 p-6 flex items-center justify-center"
@@ -30,6 +31,12 @@ const ButtonsProvider = () => {
         )}
         <p className="text-white">Se connecter avec mon compte ESPI</p>
       </Button>
+=======
+      <Button onClick={() => signIn("azure-ad")} className="bg-primary-50 p-6">Se connecter avec mon compte ESPI</Button>
+      {/* <Button onClick={() => signIn("github")} className="bg-primary-50 p-6">
+        Se connecter avec mon compte ESPI
+      </Button> */}
+>>>>>>> 49d06d04a7279dc8c6d13dce44fa9777ee2f2196
     </div>
   );
 };
