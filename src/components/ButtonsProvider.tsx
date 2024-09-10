@@ -32,9 +32,9 @@ const ButtonsProvider = () => {
           )}
           <p className="text-white">Se connecter avec mon compte ESPI</p>
         </Button>
-        <Button onClick={() => signIn("azure-ad")} className="bg-primary-50 p-6">
+        {/* <Button onClick={() => signIn("azure-ad")} className="bg-primary-50 p-6">
           Se connecter avec mon compte ESPI
-        </Button>
+        </Button> */}
         {/* <Button onClick={() => signIn("github")} className="bg-primary-50 p-6">
         Se connecter avec mon compte ESPI
       </Button> */}

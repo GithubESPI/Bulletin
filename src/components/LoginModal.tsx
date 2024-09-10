@@ -26,7 +26,7 @@ const LoginModal = ({
       <DialogContent className="absolute z-[9999999]">
         <DialogHeader>
           <div className="relative mx-auto w-24 h-24 mb-2">
-            <Image src="/logo.png" alt="ESPI logo" className="object-contain" fill />
+            <Image src="/logo.png" alt="ESPI logo" className="object-contain" fill loading="lazy" />
           </div>
           <DialogTitle className="text-3xl text-center font-bold tracking-tight text-gray-900">
             {title}

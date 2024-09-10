@@ -16,6 +16,7 @@ const Bulletin = ({ imgSrc, className, dark = false, ...props }: BulletinProps) 
         alt="bulletin"
         width={956}
         height={956}
+        loading="lazy"
       />
     </div>
   );

@@ -62,6 +62,7 @@ const Steps = () => {
                     width={80}
                     height={80}
                     alt="excel and word"
+                    loading="lazy"
                   />
                 </span>
 

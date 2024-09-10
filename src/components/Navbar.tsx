@@ -12,16 +12,18 @@ const Navbar = () => {
   const user = session?.user;
   const isAdmin = user?.email === process.env.ADMIN_EMAIL;
 
-  if (session) {
-    console.log(session);
-  }
-
   return (
     <nav className="sticky z-[100] h-14 inset-x-0 top-0 w-full border-b border-gray-200 bg-gradient-to-r/75 from-yellow-50 to-pink-50 backdrop-blur-lg transition-all">
       <MaxWidthWrapper>
         <div className="flex h-14 items-center justify-between border-b border-zinc-200">
           <Link href="/home" className="flex z-40 font-semibold">
-            <Image src="/logo.png" alt="logo" width={150} height={150} />
+            <Image
+              src="/images/logo.png"
+              width={150}
+              height={100}
+              alt="Logo de l'application"
+              loading="lazy"
+            />
           </Link>
 
           <div className="h-full flex items-center space-x-4">
@@ -33,14 +35,14 @@ const Navbar = () => {
                 >
                   Déconnexion
                 </button>
-                {isAdmin ? (
+                {isAdmin && (
                   <Link
                     href="/dashboard"
                     className={buttonVariants({ size: "sm", variant: "ghost" })}
                   >
                     Dashboard ✨
                   </Link>
-                ) : null}
+                )}
                 <Link
                   href="#utilisation"
                   className={buttonVariants({ size: "sm", variant: "ghost" })}

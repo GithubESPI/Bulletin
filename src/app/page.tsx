@@ -1,14 +1,20 @@
 "use client";
 
-import ButtonsProvider from "@/components/ButtonsProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+const ButtonsProvider = dynamic(() => import("../components/ButtonsProvider"), {
+  ssr: false, // Disable Server Side Rendering if necessary
+});
+
 export default function Page() {
   const { data: session, status } = useSession();
+  console.log(session);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -21,14 +27,26 @@ export default function Page() {
   return (
     <main className="relative h-screen w-full">
       <div className="absolute size-full">
-        <Image src="/images/background.png" alt="background" fill className="size-full" />
+        <Image
+          src="/images/background.png"
+          alt="background"
+          fill
+          className="size-full"
+          loading="lazy"
+        />
       </div>
 
       <div className="flex-center glassmorphism-auth h-screen w-full">
         <div className="flex items-center justify-center min-h-screen p-4 z-50">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <Image src="/logo.png" alt="logo" width={180} height={180} className="m-auto" />
+              <Image
+                src="/images/logo.png"
+                alt="logo"
+                width={180}
+                height={180}
+                className="m-auto"
+              />
             </CardHeader>
 
             <CardContent>
