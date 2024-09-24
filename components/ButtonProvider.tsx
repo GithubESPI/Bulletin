@@ -22,7 +22,7 @@ const ButtonsProvider = () => {
     <>
       <div className="flex flex-col space-y-4">
         <Button
-          onClick={() => handleSignIn("github")}
+          onClick={() => handleSignIn("azure-ad")}
           className="w-full bg-primary-50 p-6 flex items-center justify-center"
           disabled={loading}
         >
