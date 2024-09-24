@@ -8,6 +8,15 @@ import { prisma } from "./db";
 // const githubId = process.env.GITHUB_CLIENT_ID as string;
 // const githubSecret = process.env.GITHUB_CLIENT_SECRET as string;
 
+const urlString = process.env.NEXTAUTH_URL;
+
+if (urlString && urlString.trim()) {
+  const validUrl = new URL(urlString);
+} else {
+  console.error("Invalid NEXTAUTH_URL: ", urlString);
+  throw new Error("Invalid NEXTAUTH_URL provided");
+}
+
 // Azure
 const azureId = process.env.AZURE_AD_CLIENT_ID as string;
 const azureSecret = process.env.AZURE_AD_CLIENT_SECRET as string;
@@ -29,6 +38,10 @@ export const authOptions: NextAuthOptions = {
         session.user.id = user.id;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Ici vous pouvez également vérifier les URLs avant de rediriger
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
 };

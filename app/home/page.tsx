@@ -5,6 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import StepsSections from "@/components/StepsSections";
 import dynamic from "next/dynamic";
 
+export async function getServerSideProps() {
+  return { props: {} }; // Ceci force le rendu côté serveur et désactive le pré-rendu statique
+}
+
 const DynamicReviews = dynamic(() => import("@/components/Reviews"), {
   ssr: false,
 });
