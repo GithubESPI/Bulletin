@@ -11,10 +11,6 @@ import { useEffect, useState, useTransition } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
 
 /* eslint-disable no-console */
-// Helper function to handle logging
-export async function getServerSideProps() {
-  return { props: {} }; // Ceci force le rendu côté serveur et désactive le pré-rendu statique
-}
 
 const log = (message: string, data?: unknown, error: boolean = false) => {
   if (process.env.NODE_ENV === "development") {
