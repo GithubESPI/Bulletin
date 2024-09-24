@@ -31,7 +31,7 @@ jobs:
           node-version: "18" # Version de Node.js à utiliser
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --omit=dev
 
       - name: Generate Prisma Client
         run: npx prisma generate # Génération du client Prisma
