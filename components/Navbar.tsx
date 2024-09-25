@@ -66,7 +66,7 @@ const Navbar = () => {
             ) : (
               <>
                 <button
-                  onClick={() => signIn("azure-ad")}
+                  onClick={() => signIn("azure-ad", { callbackUrl: "/home" })}
                   className={buttonVariants({ size: "sm", variant: "ghost" })}
                 >
                   Se connecter

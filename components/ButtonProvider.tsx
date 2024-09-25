@@ -10,13 +10,13 @@ const ButtonsProvider = () => {
   const handleSignIn = async (provider: string) => {
     setLoading(true); // Démarre le loader
     try {
-      await signIn(provider); // Appelez le fournisseur d'authentification ici
+      await signIn(provider, {
+        callbackUrl: "/home",
+      }); // Appelez le fournisseur d'authentification ici
     } catch (error) {
       setLoading(false); // Si une erreur se produit, arrêtez le loader
     }
   };
-
-  /* <Button onClick={() => signIn("azure-ad")} className="bg-primary-50 p-6">Se connecter avec Azure</Button> */
 
   return (
     <>
@@ -33,12 +33,6 @@ const ButtonsProvider = () => {
           )}
           <p className="text-white">Se connecter avec mon compte ESPI</p>
         </Button>
-        {/* <Button onClick={() => signIn("azure-ad")} className="bg-primary-50 p-6">
-          Se connecter avec mon compte ESPI
-        </Button> */}
-        {/* <Button onClick={() => signIn("github")} className="bg-primary-50 p-6">
-        Se connecter avec mon compte ESPI
-      </Button> */}
       </div>
     </>
   );
