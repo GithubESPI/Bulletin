@@ -1,10 +1,8 @@
-// Importez votre instance Prisma
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { prisma } from "./db";
 
-// Azure
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -19,37 +17,69 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ account, profile }) {
-      // Vérifiez si account est défini
-      if (!account) {
-        return false;
+      if (!account || !profile) {
+        return false; // Ensure both account and profile exist
       }
 
-      // Logique pour lier les comptes OAuth, si un utilisateur est déjà enregistré
-      const existingUser = await prisma.user.findFirst({
-        where: { email: profile?.email },
-      });
+      try {
+        // Find existing user by email
+        const existingUser = await prisma.user.findUnique({
+          where: { email: profile.email as string },
+        });
 
-      if (existingUser) {
-        // Associer le nouveau compte OAuth au compte existant
-        await prisma.account.create({
+        if (existingUser) {
+          // Update the existing account
+          await prisma.account.update({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            data: {
+              access_token: account.access_token,
+              token_type: account.token_type,
+              refresh_token: account.refresh_token,
+              expires_at: account.expires_at,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state: account.session_state,
+            },
+          });
+
+          return true; // Explicitly return true for success
+        }
+
+        // Create a new user if none exists
+        const newUser = await prisma.user.create({
           data: {
-            userId: existingUser.id,
-            provider: account.provider,
-            providerAccountId: account.providerAccountId,
-            type: account.type,
-            access_token: account.access_token, // Champs supportés par votre modèle Prisma
-            token_type: account.token_type,
-            scope: account.scope,
-            expires_at: account.expires_at,
-            id_token: account.id_token, // Si nécessaire
-            refresh_token: account.refresh_token ?? null, // Si vous utilisez des tokens de rafraîchissement
-            session_state: account.session_state ?? null,
+            email: profile.email as string,
+            name: profile.name as string,
           },
         });
-        return true;
-      }
 
-      return true; // Toujours autoriser la connexion pour les nouveaux utilisateurs
+        // Create a new account for the user
+        await prisma.account.create({
+          data: {
+            userId: newUser.id,
+            provider: account.provider,
+            providerAccountId: account.providerAccountId,
+            access_token: account.access_token,
+            token_type: account.token_type,
+            refresh_token: account.refresh_token,
+            expires_at: account.expires_at,
+            scope: account.scope,
+            id_token: account.id_token,
+            session_state: account.session_state,
+            type: "oauth", // Specify the account type here
+          },
+        });
+
+        return true; // Indicate successful sign-in
+      } catch (error) {
+        console.error("Sign-in error:", error);
+        return false; // Return false on error
+      }
     },
   },
 };

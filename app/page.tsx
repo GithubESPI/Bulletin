@@ -7,8 +7,9 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 export default function Page() {
-  const { data: session } = useSession();
-  if (session) {
+  const { status } = useSession();
+
+  if (status === "authenticated") {
     redirect("/home");
   }
 
