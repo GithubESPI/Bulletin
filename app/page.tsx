@@ -4,13 +4,14 @@ import ButtonProvider from "@/components/ButtonProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function Page() {
   const { status } = useSession();
+  const router = useRouter();
 
   if (status === "authenticated") {
-    redirect("/home");
+    router.push("/home");
   }
 
   return (
