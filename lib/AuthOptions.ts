@@ -4,10 +4,6 @@ import { NextAuthOptions } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { prisma } from "./db";
 
-// Github
-// const githubId = process.env.GITHUB_CLIENT_ID as string;
-// const githubSecret = process.env.GITHUB_CLIENT_SECRET as string;
-
 // Azure
 const azureId = process.env.AZURE_AD_CLIENT_ID as string;
 const azureSecret = process.env.AZURE_AD_CLIENT_SECRET as string;
