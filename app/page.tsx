@@ -2,6 +2,7 @@
 
 import ButtonProvider from "@/components/ButtonProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerUrl } from "@/lib/getServerUrl";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -9,8 +10,11 @@ import { useRouter } from "next/navigation";
 export default function Page() {
   const { status } = useSession();
   const router = useRouter();
+  const serverUrl = getServerUrl(); // Use the function here
 
   if (status === "authenticated") {
+    // Example usage of serverUrl
+    console.log(`Server URL: ${serverUrl}`);
     if (process.env.NODE_ENV === "production") {
       router.push("/home");
     }
