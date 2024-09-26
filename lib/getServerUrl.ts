@@ -7,8 +7,8 @@ export const getServerUrl = () => {
   }
 
   // If we are in production, we return the Azure production URL.
-  if (process.env.NODE_ENV === "production") {
-    return process.env.AZURE_PROD_URL;
+  if (process.env.AZURE_PROD_URL) {
+    return `https://${process.env.AZURE_PROD_URL}`;
   }
 
   // If we are in development, we return the localhost URL.
