@@ -15,6 +15,7 @@ const ButtonsProvider = () => {
       }); // Appelez le fournisseur d'authentification ici
     } catch (error) {
       setLoading(false); // Si une erreur se produit, arrêtez le loader
+      console.error("Erreur lors de la connexion :", error);
     }
   };
 
