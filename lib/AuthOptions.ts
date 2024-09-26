@@ -18,7 +18,8 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ account, profile }) {
       if (!account || !profile) {
-        return false; // Ensure both account and profile exist
+        console.error("Sign-in error: Missing account or profile");
+        return false;
       }
 
       try {
@@ -81,9 +82,23 @@ export const authOptions: NextAuthOptions = {
         return false; // Return false on error
       }
     },
+    async session({ session }) {
+      // Ajoutez des informations supplémentaires à la session si nécessaire
+      return session;
+    },
   },
-  debug: true,
+  // Désactivez le mode debug en production
+  debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/",
+    error: "/auth/error", // Ajoutez une page d'erreur personnalisée
+  },
+  // Ajoutez une gestion des erreurs
+  events: {
+    signIn: async ({ user }) => {
+      if (!user) {
+        console.error("NextAuth error: User not found");
+      }
+    },
   },
 };
