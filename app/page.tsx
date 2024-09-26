@@ -11,7 +11,9 @@ export default function Page() {
   const router = useRouter();
 
   if (status === "authenticated") {
-    router.push("/home");
+    if (process.env.NODE_ENV === "production") {
+      router.push("/home");
+    }
   }
 
   return (

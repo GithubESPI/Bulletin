@@ -87,7 +87,6 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // Désactivez le mode debug en production
   debug: process.env.NODE_ENV === "development",
   pages: {
     signIn: "/",
@@ -99,6 +98,12 @@ export const authOptions: NextAuthOptions = {
       if (!user) {
         console.error("NextAuth error: User not found");
       }
+    },
+  },
+  // Add error handling for NextAuth
+  logger: {
+    error(code, metadata) {
+      console.error("NextAuth error:", code, metadata);
     },
   },
 };
