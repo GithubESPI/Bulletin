@@ -10,11 +10,23 @@ import { useRouter } from "next/navigation";
 export default function Page() {
   const { status } = useSession();
   const router = useRouter();
-  const serverUrl = getServerUrl(); // Use the function here
+  const serverUrl = getServerUrl();
 
   if (status === "authenticated") {
     // Example usage of serverUrl
-    console.log(`Server URL: ${serverUrl}`);
+    fetch(`${serverUrl}/api/auth/providers`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Providers:", data);
+      })
+      .catch((error) => {
+        console.error("Error fetching providers:", error);
+      });
     if (process.env.NODE_ENV === "production") {
       router.push("/home");
     }
